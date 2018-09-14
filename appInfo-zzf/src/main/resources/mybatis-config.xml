@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- 配置mybatis的log实现为log4j -->
+    <settings>
+        <setting name="logImpl" value="LOG4J"/>
+        <!-- 匹配模式 -->
+        <setting name="autoMappingBehavior" value="FULL"/>
+        <!-- 设置全局性懒加载 -->
+        <setting name="lazyLoadingEnabled" value="false"/>
+    </settings>
+    <!-- java类型命名一个简称 -->
+    <typeAliases>
+        <!-- 这里个实体类去别名，方便在mapper配置文件中的使用 -->
+        <package name="cn.appsys.pojo"/>
+    </typeAliases>
+    
+</configuration>

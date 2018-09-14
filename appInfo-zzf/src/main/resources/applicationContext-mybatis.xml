@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- 获取配置文件 -->
+	<context:property-placeholder location="classpath:database.properties"
+		ignore-unresolvable="true" />
+	<!-- 配置数据库 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${driver}" />
+		<property name="url" value="${url}" />
+		<property name="username" value="${user}" />
+		<property name="password" value="${password}" />
+		<!-- 初始化连接时，创建的连接个数 -->
+		<property name="initialSize" value="${initialSize}" />
+		<!-- 同时连接的最大连接数，默认为8 -->
+		<property name="maxActive" value="${maxActive}" />
+		<!-- 最大空闲连接数，默认为8 -->
+		<property name="minIdle" value="${minIdle}" />
+		<!-- 最大等待连接时间 -->
+		<property name="maxWait" value="${maxWait}" />
+		<!-- 无用连接回收，默认false -->
+		<property name="removeAbandoned" value="${removeAbandoned}" />
+		<!-- 无用连接超出时间，就会被回收，默认300秒 -->
+		<property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}" />
+		<!-- sql心跳 -->
+		<!-- 定义开启Evict的定时效验（循环效验） -->
+		<property name="testWhileIdle" value="true" />
+		<!-- 定义在进行borrowObject处理时，对拿到的连接是否校验，默认为false -->
+		<property name="testOnBorrow" value="false" />
+		<!-- 定义在returnObject是，对返回的连接是否效验，默认为false -->
+		<property name="testOnReturn" value="false" />
+		<!-- 定义效验使用的sql语句 -->
+		<property name="validationQuery" value="select 1" />
+		<!-- 定义Evict的时间间隔 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<!-- 定义每次效验的连接的数量 -->
+		<property name="numTestsPerEvictionRun" value="${maxActive}" />
+	</bean>
+	<!-- 事务管理 -->
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- 配置事务属性 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="find*" propagation="SUPPORTS" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="*" propagation="REQUIRED" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- 定义切面 -->
+	<aop:config>
+		<!-- 切入点 -->
+		<aop:pointcut id="ponincut" expression="execution(* cn.appsys.service..*.*(..))" />
+		<!-- 事务处理 -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="ponincut" />
+	</aop:config>
+	<!-- 配置myBatis的sqlsessionFatoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+	</bean>
+	<!-- 配置mybatis的Mapper所在包：自动查找并注册 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="cn.appsys.dao"/>
+	</bean>
+	<!-- 业务层映射:扫描注解 -->
+    <context:component-scan base-package="cn.appsys.service"/>
+
+</beans>
